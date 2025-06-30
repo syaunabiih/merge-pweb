@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Status Peminjaman</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-100 flex">
+  <%- include('./partials/sidebar') %>
+  <div class="flex-1 flex flex-col">
+    <%- include('./partials/header', { user: user || { name: 'Admin' } }) %>
+    <main class="flex-1 p-6 md:p-10">
+      <!-- Main Header -->
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Status Peminjaman</h1>
+        <a href="/admin/fines/history-page" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+          <i class="fas fa-history mr-2"></i>Lihat Riwayat Denda
+        </a>
+      </div>
+
+      <!-- Items Table -->
+      <div class="mb-10">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Daftar Barang</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full rounded-xl overflow-hidden bg-white shadow-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="p-4 text-left font-semibold text-gray-600">No</th>
+                <th class="p-4 text-left font-semibold text-gray-600">Nama</th>
+                <th class="p-4 text-left font-semibold text-gray-600">Kategori</th>
+                <th class="p-4 text-left font-semibold text-gray-600">Deskripsi</th>
+                <th class="p-4 text-left font-semibold text-gray-600">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% if (typeof items !== 'undefined' && items.length > 0) { %>
+                <% items.forEach((item, index) => { %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4 font-medium text-gray-900"><%= index + 1 %></td>
+                    <td class="p-4 font-medium text-gray-900"><%= item.nama %></td>
+                    <td class="p-4 text-gray-600"><%= item.kategori %></td>
+                    <td class="p-4 text-gray-600"><%= item.deskripsi %></td>
+                    <td class="p-4">
+                      <% if (item.status === 'Tersedia') { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          <%= item.status %>
+                        </span>
+                      <% } else if (item.status === 'Dipinjam') { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                          <%= item.status %>
+                        </span>
+                      <% } else { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          <%= item.status %>
+                        </span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="5" class="text-center p-5 text-gray-500">Tidak ada data barang untuk ditampilkan.</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Fines Table -->
+      <% if (typeof fines !== 'undefined' && fines.length > 0) { %>
+        <div class="mb-10">
+          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Daftar Denda</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full rounded-xl overflow-hidden bg-white shadow-lg">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="p-4 text-left font-semibold text-gray-600">No</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Order ID</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">User</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Item/Layanan</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Jumlah Denda</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Alasan</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Status</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Tanggal</th>
+                  <th class="p-4 text-left font-semibold text-gray-600">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <% fines.forEach((fine, idx) => { %>
+                  <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="p-4 font-medium text-gray-900"><%= idx + 1 %></td>
+                    <td class="p-4 font-medium text-gray-900">
+                      <a href="/admin/orders/<%= fine.Order?.id %>" class="text-blue-600 hover:underline">
+                        #<%= fine.orderId %>
+                      </a>
+                    </td>
+                    <td class="p-4 text-gray-600">
+                      <% if (fine.Order?.User) { %>
+                        <div>
+                          <div class="font-medium"><%= fine.Order.User.name %></div>
+                          <div class="text-xs text-gray-500"><%= fine.Order.User.email %></div>
+                        </div>
+                      <% } else { %>
+                        <%= fine.Order?.user_id || 'N/A' %>
+                      <% } %>
+                    </td>
+                    <td class="p-4 text-gray-600">
+                      <% if (fine.itemDetails) { %>
+                        <div>
+                          <div class="font-medium"><%= fine.itemDetails.name %></div>
+                          <div class="text-xs text-gray-500"><%= fine.Order?.itemType === 'item' ? 'Item' : 'Layanan' %></div>
+                        </div>
+                      <% } else { %>
+                        <span class="text-gray-400">-</span>
+                      <% } %>
+                    </td>
+                    <td class="p-4 font-medium text-gray-900"><%= formatNumber(fine.amount) %></td>
+                    <td class="p-4 text-gray-600"><%= fine.reason || '-' %></td>
+                    <td class="p-4">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full <%= getStatusClass(fine.status) %>">
+                        <%= getStatusText(fine.status) %>
+                      </span>
+                    </td>
+                    <td class="p-4 text-gray-600"><%= formatDate(fine.createdAt) %></td>
+                    <td class="p-4">
+                      <div class="flex space-x-2">
+                        <select id="status-<%= fine.id %>" class="border rounded px-2 py-1 text-xs">
+                          <option value="pending" <%= fine.status === 'pending' ? 'selected' : '' %>>Menunggu</option>
+                          <option value="paid" <%= fine.status === 'paid' ? 'selected' : '' %>>Dibayar</option>
+                          <option value="waived" <%= fine.status === 'waived' ? 'selected' : '' %>>Dibebaskan</option>
+                        </select>
+                        <button onclick="updateFineStatus('<%= fine.id %>')" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition">
+                          Update
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="mb-10">
+          <h2 class="text-2xl font-semibold text-gray-700 mb-4">Daftar Denda</h2>
+          <div class="bg-white rounded-xl shadow-lg p-8 text-center">
+            <div class="mx-auto h-16 w-16 text-gray-400 mb-4">
+              <i class="fas fa-file-invoice-dollar fa-3x"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Belum Ada Denda</h3>
+            <p class="text-gray-500">Tidak ada denda yang perlu dikelola saat ini.</p>
+          </div>
+        </div>
+      <% } %>
+    </main>
+  </div>
+
+  <script>
+    async function updateFineStatus(fineId) {
+      const status = document.getElementById(`status-${fineId}`).value;
+      
+      try {
+        const res = await fetch(`/admin/fines/${fineId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: 'Status denda berhasil diperbarui',
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            // Refresh halaman untuk menampilkan data terbaru
+            window.location.reload();
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: result.message || 'Gagal update status denda'
+          });
+        }
+      } catch (error) {
+        console.error('Error updating fine status:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error!',
+          text: 'Terjadi kesalahan saat update status'
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UMCental - Buat Pesanan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+    <style>
+        .bg-custom-dark {
+            background-color: #181C14;
+        }
+
+        .bg-custom-green {
+            background-color: #697565;
+        }
+
+        .text-custom-green {
+            color: #697565;
+        }
+
+        .border-custom-green {
+            border-color: #697565;
+        }
+
+        .ring-custom-green:focus {
+            --tw-ring-color: #697565;
+        }
+
+        .bg-custom-light-beige {
+            background-color: #f5f0e9;
+        }
+
+        .text-custom-brown {
+            color: #7f7a75;
+        }
+
+        .hover\:bg-custom-green-dark:hover {
+            background-color: #5a6356;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen bg-custom-light-beige">
+
+    <%- include('../partials/sidebar') %>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col">
+        <%- include('../partials/header') %>
+
+        <main class="flex-1 p-6 md:p-10">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header -->
+                <div class="mb-8">
+                    <a href="/user/orders" class="text-sm text-custom-green hover:underline mb-4 inline-block">
+                        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Daftar Pesanan
+                    </a>
+                    <h1 class="text-3xl font-bold text-custom-dark">Buat Pesanan Baru</h1>
+                    <p class="text-custom-brown mt-1">Pilih barang atau jasa yang ingin Anda sewa.</p>
+                </div>
+                
+                <form id="order-form" class="space-y-8">
+                    <!-- Item Selection -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h2 class="text-xl font-semibold text-custom-dark mb-6">1. Pilih Item</h2>
+                        <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Items will be loaded here -->
+                            <div class="h-24 col-span-full animate-pulse bg-gray-200 rounded-lg"></div>
+                        </div>
+                    </div>
+
+                    <!-- Schedule and Total -->
+                    <div class="bg-white p-8 rounded-xl shadow-md border border-gray-200">
+                        <h2 class="text-xl font-semibold text-custom-dark mb-6">2. Tentukan Jadwal</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                            <div>
+                                <label for="tanggal-pinjam" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Pinjam</label>
+                                <input type="date" id="tanggal-pinjam" name="tanggal_pinjam" class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom-green focus:ring-custom-green" required />
+                            </div>
+                            <div>
+                                <label for="tanggal-kembali" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Kembali</label>
+                                <input type="date" id="tanggal-kembali" name="tanggal_kembali" class="w-full border-gray-300 rounded-md shadow-sm focus:border-custom-green focus:ring-custom-green" required />
+                            </div>
+                            <div class="md:col-span-2 mt-4 pt-6 border-t">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-medium text-custom-dark">Total Biaya</span>
+                                    <span id="total-harga" class="text-2xl font-bold text-custom-green">Rp 0</span>
+                                </div>
+                                <div id="selected-items" class="text-xs text-custom-brown space-y-1 mt-2 text-right">
+                                    <!-- Selected items summary -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submission -->
+                    <div class="flex justify-end pt-4">
+                        <button id="btn-pesan" type="submit" class="bg-custom-green hover:bg-custom-green-dark text-white font-bold py-3 px-8 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="btn-text">Buat Pesanan</span>
+                            <i id="btn-loading" class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+        
+        <%- include('../partials/footer') %>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemCheckboxes = document.querySelectorAll('.item-checkbox');
+            const quantitySelects = document.querySelectorAll('.quantity-select');
+            const totalHargaElement = document.getElementById('total-harga');
+            const selectedItemsElement = document.getElementById('selected-items');
+            const orderForm = document.getElementById('order-form');
+            const btnPesan = document.getElementById('btn-pesan');
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+            const tanggalPinjam = document.getElementById('tanggal-pinjam');
+            const tanggalKembali = document.getElementById('tanggal-kembali');
+            const successMessage = document.getElementById('success-message');
+
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            tanggalPinjam.min = today;
+            tanggalKembali.min = today;
+
+            // Update minimum return date when borrow date changes
+            tanggalPinjam.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const nextDay = new Date(selectedDate);
+                nextDay.setDate(selectedDate.getDate() + 1);
+                
+                tanggalKembali.min = nextDay.toISOString().split('T')[0];
+                
+                // If return date is before or equal to borrow date, reset it
+                if (tanggalKembali.value <= this.value) {
+                    tanggalKembali.value = nextDay.toISOString().split('T')[0];
+                }
+            });
+
+            function updateTotal() {
+                let total = 0;
+                let selectedItems = [];
+
+                itemCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const price = parseFloat(checkbox.dataset.price);
+                        const itemName = checkbox.dataset.name;
+                        const stock = parseInt(checkbox.dataset.stock);
+                        const quantitySelect = document.querySelector(`select[data-item-id="${checkbox.value}"]`);
+                        const quantity = parseInt(quantitySelect.value);
+                        
+                        // Validate quantity against stock
+                        if (quantity > stock) {
+                            quantitySelect.value = Math.min(stock, 1);
+                            quantity = parseInt(quantitySelect.value);
+                        }
+                        
+                        const itemTotal = price * quantity;
+                        total += itemTotal;
+                        
+                        selectedItems.push({
+                            name: itemName,
+                            quantity: quantity,
+                            price: price,
+                            total: itemTotal,
+                            stock: stock
+                        });
+                    }
+                });
+
+                totalHargaElement.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+                
+                // Display selected items
+                selectedItemsElement.innerHTML = selectedItems.map(item => 
+                    `<div>${item.name} x${item.quantity} = Rp ${item.total.toLocaleString('id-ID')} 
+                     <span class="text-gray-500">(Stok: ${item.stock})</span></div>`
+                ).join('');
+            }
+
+            function showMessage(message, isError = false) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `px-4 py-3 rounded mb-4 ${isError ? 'bg-red-100 border border-red-400 text-red-700' : 'bg-green-100 border border-green-400 text-green-700'}`;
+                messageDiv.textContent = message;
+                
+                const firstChild = document.querySelector('.flex-col.space-y-6').firstElementChild;
+                document.querySelector('.flex-col.space-y-6').insertBefore(messageDiv, firstChild);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    messageDiv.remove();
+                }, 5000);
+            }
+
+            function setLoading(loading) {
+                if (loading) {
+                    btnText.textContent = 'Memproses...';
+                    btnLoading.classList.remove('hidden');
+                    btnPesan.disabled = true;
+                    document.body.classList.add('loading');
+                } else {
+                    btnText.textContent = 'Buat Pesanan';
+                    btnLoading.classList.add('hidden');
+                    btnPesan.disabled = false;
+                    document.body.classList.remove('loading');
+                }
+            }
+
+            // Add event listeners
+            itemCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateTotal);
+            });
+
+            quantitySelects.forEach(select => {
+                select.addEventListener('change', updateTotal);
+            });
+
+            // Order form submission
+            orderForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const selectedItem = document.querySelector('.item-checkbox:checked');
+                const pinjamDate = tanggalPinjam.value;
+                const kembaliDate = tanggalKembali.value;
+
+                if (!selectedItem) {
+                    showMessage('Pilih barang terlebih dahulu', true);
+                    return;
+                }
+
+                if (!pinjamDate || !kembaliDate) {
+                    showMessage('Pilih tanggal peminjaman dan pengembalian', true);
+                    return;
+                }
+
+                const quantitySelect = document.querySelector(`select[data-item-id="${selectedItem.value}"]`);
+                const quantity = parseInt(quantitySelect.value);
+
+                setLoading(true);
+
+                try {
+                    const response = await fetch('/user/pemesanan', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            item_id: selectedItem.value,
+                            quantity: quantity,
+                            tanggal_pinjam: pinjamDate,
+                            tanggal_kembali: kembaliDate
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showMessage(result.message);
+                        
+                        // Reset form
+                        orderForm.reset();
+                        tanggalPinjam.min = today;
+                        tanggalKembali.min = today;
+                        
+                        // Refresh page after 2 seconds to show updated stock
+                        setTimeout(() => {
+                            if (result.redirect) {
+                                window.location.href = result.redirect;
+                            } else {
+                                location.reload();
+                            }
+                        }, 2000);
+                    } else {
+                        showMessage(result.message, true);
+                    }
+                } catch (error) {
+                    console.error('Error submitting order:', error);
+                    showMessage('Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.', true);
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            // Initial calculation
+            updateTotal();
+
+            // Check for connection to database
+            console.log('Pemesanan page loaded successfully');
+            console.log('Items loaded:', itemCheckboxes.length);
+        });
+    </script>
+</body>
+
+</html>

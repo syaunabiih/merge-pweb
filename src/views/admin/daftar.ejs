@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin - Daftar Barang dan Jasa</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            'brand-beige': '#DED9CE', 'brand-brown': { DEFAULT: '#6C6154', 'light': '#A8A288', 'dark': '#403f36' }, 'brand-olive': { light: '#859984', DEFAULT: '#7C8779', medium: '#65745d', dark: '#4a4f3b' }, 'brand-dark-gray': '#2B2B2B',
+          },
+          keyframes: {
+            'fade-in-down': {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'fade-out-up': {
+              '0%': { opacity: '1', transform: 'translateY(0)' },
+              '100%': { opacity: '0', transform: 'translateY(-10px)' },
+            }
+          },
+          animation: {
+            'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
+            'fade-out-up': 'fade-out-up 0.5s ease-out forwards',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+
+<body class="bg-gray-100 flex">
+  <%- include('./partials/sidebar') %>
+  <div class="flex-1 flex flex-col">
+    <%- include('./partials/header', { user: user || { name: 'Admin' } }) %>
+    <main class="flex-1 p-6 md:p-10">
+      <!-- Main Header -->
+      <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">Daftar Barang dan Jasa</h1>
+        <div class="flex items-center space-x-2">
+          <select class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <option>Semua Kategori</option>
+          </select>
+          <input type="text" placeholder="Cari nama/deskripsi..." class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mb-6 flex space-x-3">
+        <button class="bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center">
+          <i class="fas fa-file-pdf mr-2"></i>PDF
+        </button>
+        <a href="/admin/tambah" class="bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center">
+          <i class="fas fa-plus mr-2"></i>Tambah Barang
+        </a>
+        <button class="bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors flex items-center">
+          <i class="fas fa-edit mr-2"></i>Edit
+        </button>
+      </div>
+
+      <!-- Items Table -->
+      <div class="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">NAMA</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">STATUS</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">HARGA</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">JUMLAH</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">FOTO</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">DIBUAT</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">DIUPDATE</th>
+                <th class="p-4 text-left text-sm font-semibold text-gray-600">AKSI</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% if (items && items.length > 0) { %>
+                <% items.forEach(item => { %>
+                  <tr class="hover:bg-gray-50">
+                    <td class="p-4 whitespace-nowrap">
+                      <div class="font-medium text-gray-900"><%= item.name %></div>
+                      <div class="text-sm text-gray-500"><%= item.description.substring(0, 50) %>...</div>
+                    </td>
+                    <td class="p-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        <%= item.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                        <%= item.status %>
+                      </span>
+                    </td>
+                    <td class="p-4 whitespace-nowrap text-sm text-gray-800">Rp <%= Number(item.price).toLocaleString('id-ID') %></td>
+                    <td class="p-4 whitespace-nowrap text-sm text-gray-800"><%= item.quantity %></td>
+                    <td class="p-4 whitespace-nowrap">
+                      <% if (item.photo) { %>
+                        <img src="/uploads/<%= item.photo %>" alt="<%= item.name %>" class="w-10 h-10 rounded-md object-cover">
+                      <% } else { %>
+                        <div class="w-10 h-10 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
+                          <i class="fas fa-image"></i>
+                        </div>
+                      <% } %>
+                    </td>
+                    <td class="p-4 whitespace-nowrap text-sm text-gray-600"><%= new Date(item.createdAt).toLocaleDateString('id-ID') %></td>
+                    <td class="p-4 whitespace-nowrap text-sm text-gray-600"><%= new Date(item.updatedAt).toLocaleDateString('id-ID') %></td>
+                    <td class="p-4 whitespace-nowrap text-sm font-medium">
+                      <a href="/admin/edit/<%= item.id %>" class="text-blue-600 hover:text-blue-900 mr-4">Detail</a>
+                      <a href="/admin/hapus/<%= item.id %>" class="text-red-600 hover:text-red-900" onclick="return confirm('Apakah Anda yakin ingin menghapus item ini?')">Hapus</a>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" class="text-center p-8 text-gray-500">
+                    Tidak ada barang atau jasa yang ditemukan.
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // --- Logika untuk Notifikasi dari URL (Tambah/Edit) ---
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('create') || params.has('update')) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Item berhasil ${params.has('create') ? 'ditambahkan' : 'diubah'}`,
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true,
+        });
+      }
+
+      // --- Logika BARU untuk Tombol Hapus ---
+      const deleteButtons = document.querySelectorAll('.delete-button');
+
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const itemId = this.dataset.id;
+          const itemName = this.dataset.nama;
+
+          // 1. Munculkan pop-up konfirmasi
+          Swal.fire({
+            title: 'Apakah Anda Yakin?',
+            html: `Anda akan menghapus item:<br><b>"${itemName}"</b><br>Tindakan ini tidak bisa dibatalkan!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6e7881',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            // 2. Jika dikonfirmasi, lakukan proses hapus
+            if (result.isConfirmed) {
+              fetch(`/admin/api/hapus/${itemId}`, { method: 'DELETE' })
+              .then(response => response.json().then(data => {
+                if (!response.ok) throw new Error(data.message || 'Gagal menghapus.');
+                return data;
+              }))
+              .then(data => {
+                // 3. Tampilkan notifikasi sukses
+                Swal.fire({
+                  title: 'Dihapus!',
+                  text: data.message,
+                  icon: 'success',
+                  timer: 2000,
+                  showConfirmButton: false,
+                });
+                
+                // 4. Hapus baris dari tabel dengan animasi
+                const row = document.getElementById(`item-row-${itemId}`);
+                if (row) {
+                  row.classList.add('row-fade-out');
+                  setTimeout(() => row.remove(), 500); 
+                }
+              })
+              .catch(error => {
+                // Tampilkan notifikasi gagal
+                Swal.fire('Gagal!', error.message, 'error');
+              });
+            }
+          })
+        });
+      });
+    });
+  </script>
+</body>
+</html>
