@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF--8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manajemen Alat dan Jasa Dashboard</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            'brand-beige': '#DED9CE', 'brand-brown': { DEFAULT: '#6C6154', 'light': '#A8A288', 'dark': '#403f36' }, 'brand-olive': { light: '#859984', DEFAULT: '#7C8779', medium: '#65745d', dark: '#4a4f3b' }, 'brand-dark-gray': '#2B2B2B',
+          },
+          keyframes: {
+            'fade-in-down': {
+              '0%': { opacity: '0', transform: 'translateY(-10px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'fade-out-up': {
+              '0%': { opacity: '1', transform: 'translateY(0)' },
+              '100%': { opacity: '0', transform: 'translateY(-10px)' },
+            }
+          },
+          animation: {
+            'fade-in-down': 'fade-in-down 0.5s ease-out forwards',
+            'fade-out-up': 'fade-out-up 0.5s ease-out forwards',
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style>
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    .row-fade-out {
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: all 0.5s ease-out;
+    }
+    
+    @media print {
+      body {
+        background: #fff !important;
+      }
+      .print-area {
+        display: block !important;
+      }
+      body > *:not(.print-area) {
+        display: none !important;
+      }
+      .print-area table {
+        display: table !important;
+        width: 100% !important;
+        font-size: 12px;
+        background: #fff !important;
+        border-collapse: collapse !important;
+        border: 1px solid #000 !important;
+      }
+      .print-area thead, .print-area tbody {
+        background: #fff !important;
+      }
+      .print-area tr {
+        display: table-row !important;
+        background: #fff !important;
+      }
+      .print-area th, .print-area td {
+        display: table-cell !important;
+        padding: 6px 8px !important;
+        background: #fff !important;
+        border: 1px solid #000 !important;
+        color: #000 !important;
+      }
+      img[alt="Logo UMC"] {
+        display: block !important;
+        margin-bottom: 16px !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-brand-beige text-brand-brown font-sans flex flex-col min-h-screen">
+  <!-- Print area: hanya muncul saat print -->
+  <div class="print-area hidden print:block">
+    <div class="print:flex print:items-center print:mb-4">
+      <img src="/images/logo_umc.png" alt="Logo UMC" class="print:w-32 print:h-auto print:mr-4" style="margin-bottom: 16px;" />
+    </div>
+    <div class="overflow-x-auto print:overflow-visible">
+      <table class="min-w-full bg-white rounded-lg shadow divide-y divide-gray-200 print:shadow-none print:rounded-none print:w-full">
+        <thead class="bg-gray-100 print:bg-white">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foto</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diupdate</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <% if (typeof items !== 'undefined' && items.length > 0) { %>
+            <% items.forEach((item) => { %>
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.no %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= item.name %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.category || (item.type === 'service' ? 'jasa' : '-') %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.type %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.description %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.status %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.price ? 'Rp ' + Number(item.price).toLocaleString('id-ID') : '-' %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.quantity === '-' ? '-' : item.quantity %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <% if (item.photo) { %>
+                    <img src="/uploads/<%= item.photo %>" alt="Foto" class="w-12 h-12 object-cover rounded print:w-16 print:h-16" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                    <div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center print:w-16 print:h-16" style="display: none;">
+                      <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  <% } else { %>
+                    <span class="text-gray-400">-</span>
+                  <% } %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400"><%= item.createdAt ? item.createdAt.toLocaleDateString('id-ID') : '-' %></td>
+                <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400"><%= item.updatedAt ? item.updatedAt.toLocaleDateString('id-ID') : '-' %></td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="12" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada data barang</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- END Print area -->
+  <%- include('../../partials/admin/sidebar') %>
+  <div id="notification-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+  <div class="ml-64 app flex-grow" role="main">
+    <div class="flex flex-col w-full">
+      <header class="bg-brand-beige px-5 lg:px-10 py-4 flex justify-between items-center gap-4 sticky top-0 lg:relative border-b border-brand-brown/30 lg:border-none">
+        <div class="flex items-center gap-4 ml-auto">
+          <button class="bg-brand-olive hover:bg-brand-olive-dark text-brand-beige rounded-full w-9 h-9 flex justify-center items-center transition-colors" aria-label="Notifikasi"><span class="material-icons text-xl">notifications</span></button>
+          <div class="border border-brand-brown text-brand-brown font-semibold py-1.5 px-3 rounded-xl hidden sm:block">Admin</div>
+          <button class="bg-brand-olive hover:bg-brand-olive-dark text-brand-beige rounded-full w-9 h-9 flex justify-center items-center transition-colors" aria-label="Profil pengguna"><span class="material-icons text-xl">person</span></button>
+        </div>
+      </header>
+      <main class="content p-8 flex flex-col gap-6 bg-gray-100">
+        <div class="flex justify-between items-center mb-6">
+          <h1 class="text-2xl font-bold">Daftar Barang dan Jasa</h1>
+          <div class="flex gap-2 items-center">
+            <!-- Filter kategori -->
+            <select id="filterKategori" class="px-3 py-2 border rounded-md text-sm">
+              <option value="">Semua Kategori</option>
+              <optgroup label="Item Categories">
+                <option value="elektronik">Elektronik</option>
+                <option value="peralatan kantor">Peralatan Kantor</option>
+                <option value="peralatan olahraga">Peralatan Olahraga</option>
+                <option value="laboratorium">Laboratorium</option>
+                <option value="audio visual">Audio Visual</option>
+              </optgroup>
+              <optgroup label="Service Categories">
+                <option value="fotografi">Fotografi</option>
+                <option value="animasi dan motion grafis">Animasi dan Motion Grafis</option>
+                <option value="desain grafis">Desain Grafis</option>
+                <option value="multimedia interaktif">Multimedia Interaktif</option>
+              </optgroup>
+            </select>
+            <!-- Search -->
+            <input id="searchInput" type="text" placeholder="Cari nama/deskripsi..." class="px-3 py-2 border rounded-md text-sm" />
+            <!-- Download PDF -->
+            <button id="downloadPdfBtn" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md flex items-center gap-1" title="Download PDF">
+              <span class="material-icons text-xl">download</span> PDF
+            </button>
+            <!-- Tambah & Edit -->
+            <a href="/admin/items/create" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center gap-1">
+              <span class="material-icons text-xl">add</span> Tambah Jasa
+            </a>
+            <a href="/admin/items/edit" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md flex items-center gap-1">
+              <span class="material-icons text-xl">edit</span> Edit 
+            </a>
+          </div>
+        </div>
+
+        <% if (typeof query !== 'undefined' && (query.create || query.update || query.delete)) { %>
+          <div class="mb-4 p-3 rounded bg-green-100 text-green-800 font-semibold">
+            <% if (query.create) { %>Barang berhasil ditambahkan!<% } %>
+            <% if (query.update) { %>Barang berhasil diubah!<% } %>
+            <% if (query.delete) { %>Barang berhasil dihapus!<% } %>
+          </div>
+        <% } %>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full bg-white rounded-lg shadow divide-y divide-gray-200">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Foto</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dibuat</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diupdate</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <% if (typeof items !== 'undefined' && items.length > 0) { %>
+                <% items.forEach((item) => { %>
+                  <tr id="item-row-<%= item.id %>">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.no %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= item.name %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.category || (item.type === 'service' ? 'jasa' : '-') %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.type %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.description %></td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <% if (item.status === 'available') { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Tersedia
+                        </span>
+                      <% } else if (item.status === 'damaged') { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                          Rusak
+                        </span>
+                      <% } else if (item.status === 'maintenance') { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                          Dalam Perbaikan
+                        </span>
+                      <% } else { %>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          <%= item.status %>
+                        </span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.price ? 'Rp ' + Number(item.price).toLocaleString('id-ID') : '-' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><%= item.quantity === '-' ? '-' : item.quantity %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <% if (item.photo) { %>
+                        <img src="/uploads/<%= item.photo %>" alt="Foto" class="w-12 h-12 object-cover rounded" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                        <div class="w-12 h-12 bg-gray-200 rounded flex items-center justify-center" style="display: none;">
+                          <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                          </svg>
+                        </div>
+                      <% } else { %>
+                        <span class="text-gray-400">-</span>
+                      <% } %>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400"><%= item.createdAt ? item.createdAt.toLocaleDateString('id-ID') : '-' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-400"><%= item.updatedAt ? item.updatedAt.toLocaleDateString('id-ID') : '-' %></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <a href="/admin/items/detail/<%= item.id %>" class="text-blue-600 hover:text-blue-900 mr-2">Detail</a>
+                      <a 
+                        href="/admin/items/delete-confirmation/<%= item.id %>?type=<%= item.type %>"
+                        class="text-red-600 hover:text-red-900 bg-transparent border-none cursor-pointer">
+                        Hapus
+                      </a>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="12" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada data barang</td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+  // --- Logika untuk Notifikasi dari URL (Tambah/Edit) ---
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('create') || params.has('update') || params.has('delete')) {
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Item berhasil ${params.has('create') ? 'ditambahkan' : params.has('update') ? 'diubah' : 'dihapus'}`,
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
+  }
+
+  // FILTER, SEARCH, PDF
+  const filterKategori = document.getElementById('filterKategori');
+  const searchInput = document.getElementById('searchInput');
+  const tableRows = document.querySelectorAll('tbody tr');
+
+  function filterAndSearch() {
+    const kategori = filterKategori.value;
+    const search = searchInput.value.toLowerCase();
+    tableRows.forEach(row => {
+      const kolomKategori = row.children[2]?.textContent.trim().toLowerCase();
+      const kolomNama = row.children[1]?.textContent.trim().toLowerCase();
+      const kolomDeskripsi = row.children[4]?.textContent.trim().toLowerCase();
+      const cocokKategori = !kategori || kolomKategori === kategori;
+      const cocokSearch = !search || kolomNama.includes(search) || kolomDeskripsi.includes(search);
+      if (cocokKategori && cocokSearch) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+  filterKategori.addEventListener('change', filterAndSearch);
+  searchInput.addEventListener('input', filterAndSearch);
+
+  // Download PDF (print)
+  document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+    window.print();
+  });
+});
+  </script>
+</body>
+</html>
